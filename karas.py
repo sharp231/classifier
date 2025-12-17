@@ -1,14 +1,19 @@
-from tensorflow import keras
+from PIL import Image, ImageOps
+import numpy as np
 
-# データセットの読み込み
-(x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
+def preprocess(filepath, img_size=32, crop_right_ratio=1.0):
+    img = Image.open(filepath)
+    img = ImageOps.exif_transpose(img)   # EXIF回転反映
+    img = img.convert("RGB")
 
-# データの形状を確認
-print(f"訓練データ: {x_train.shape}")  # (60000, 28, 28)
-print(f"訓練ラベル: {y_train.shape}")  # (60000,)
-print(f"テストデータ: {x_test.shape}")  # (10000, 28, 28)
-print(f"テストラベル: {y_test.shape}")  # (10000,)
+    # 文字バナー対策（必要なら右側を切る）
+    if crop_right_ratio < 1.0:
+        w, h = img.size
+        img = img.crop((0, 0, int(w * crop_right_ratio), h))
 
-# データの正規化（0-255 → 0-1）
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+    # 縦横比を保って中央を切り抜き
+    img = ImageOps.fit(img, (img_size, img_size), method=Image.Resampling.LANCZOS)
+
+    x = np.asarray(img, dtype=np.float32) / 255.0
+    x = np.expand_dims(x, 0)
+    return x

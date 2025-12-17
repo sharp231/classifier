@@ -1,12 +1,61 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-  <div class="col content">
-    <h1>画像分類</h1>
-    <form method="post", enctype="multipart/form-data", action="/result">
-      <input name="file" type="file">
-      <input type="submit", value="判定">
-    </form>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card card-custom p-4">
+        <h2 class="text-center mb-4">画像をアップロード</h2>
+        
+        <form method="post" enctype="multipart/form-data" action="/result" onsubmit="showLoading()">
+          
+          <div class="custom-file mb-3">
+            <input type="file" class="custom-file-input" name="file" id="fileInput" required accept="image/*">
+            <label class="custom-file-label" for="fileInput">ファイルを選択...</label>
+          </div>
+
+          <div class="text-center">
+            <img id="preview" class="preview-img" src="" alt="画像プレビュー">
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+              AIで判定する
+            </button>
+            
+            <button class="btn btn-primary btn-block btn-lg d-none" type="button" disabled id="loadingBtn">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              解析中...
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ファイル選択時にプレビューを表示し、ファイル名をラベルにセットする
+  $('#fileInput').on('change', function(e) {
+      var file = e.target.files[0];
+      var reader = new FileReader();
+      
+      // ファイル名をラベルに表示
+      $(this).next('.custom-file-label').html(file.name);
+
+      // 画像プレビュー
+      reader.onload = function(e) {
+          $('#preview').attr('src', e.target.result).show();
+      }
+      reader.readAsDataURL(file);
+  });
+
+  // 送信時にボタンをローディング状態にする
+  function showLoading() {
+      $('#submitBtn').addClass('d-none'); // 判定ボタンを隠す
+      $('#loadingBtn').removeClass('d-none'); // ローディングを表示
+  }
+</script>
 {% endblock %}

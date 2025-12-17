@@ -1,13 +1,25 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-  <div class="col content">
-    <h1>判定結果</h1>
-    {{result}}
-    <p><img src="{{filepath}}"></p>
-    <form method="get" action="/">
-      <button class="submit">戻る</button>
-    </form>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card card-custom p-4 text-center">
+        <h2 class="mb-3">判定結果</h2>
+        
+        <div class="mb-4">
+          <img src="{{filepath}}" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+        </div>
+
+        <div class="alert alert-success" role="alert">
+          <h4 class="alert-heading">これは「{{result}}」です</h4>
+        </div>
+
+        <a href="/" class="btn btn-outline-secondary mt-3">
+          もう一度試す
+        </a>
+        
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
