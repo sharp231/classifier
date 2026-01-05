@@ -1,25 +1,23 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card card-custom p-4 text-center">
-        <h2 class="mb-3">判定結果</h2>
-        
-        <div class="mb-4">
-          <img src="{{filepath}}" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
-        </div>
+<div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl border border-gray-100">
+  <div class="p-8 text-center">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">判定結果</h2>
+    
+    <div class="mb-6 bg-gray-100 rounded-lg p-2 inline-block shadow-inner">
+      <img src="{{filepath}}" class="rounded max-h-64 object-contain mx-auto">
+    </div>
 
-        <div class="alert alert-success" role="alert">
-          <h4 class="alert-heading">これは「{{result}}」です</h4>
-        </div>
-
-        <a href="/" class="btn btn-outline-secondary mt-3">
-          もう一度試す
-        </a>
-        
+    <div class="bg-indigo-50 border-l-4 border-indigo-500 text-indigo-700 p-4 mb-6 text-left space-y-2">
+      <div class="text-lg font-medium leading-relaxed">
+        {{ result }}
       </div>
     </div>
+
+    <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition duration-150 ease-in-out">
+      ← もう一度試す
+    </a>
+    
   </div>
 </div>
 {% endblock %}

@@ -1,61 +1,63 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card card-custom p-4">
-        <h2 class="text-center mb-4">画像をアップロード</h2>
-        
-        <form method="post" enctype="multipart/form-data" action="/result" onsubmit="showLoading()">
+<div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl border border-gray-100">
+  <div class="p-8">
+    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">画像をアップロード</h2>
+    <p class="text-center text-gray-500 mb-8 text-sm">AIが画像に何が写っているかを判定します</p>
+    
+    <form method="post" enctype="multipart/form-data" action="/result" onsubmit="showLoading()">
+      
+      <div class="flex items-center justify-center w-full mb-6">
+        <label for="fileInput" class="flex flex-col items-center justify-center w-full h-64 border-2 border-indigo-200 border-dashed rounded-lg cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition duration-300">
+          <div class="flex flex-col items-center justify-center pt-5 pb-6" id="drop-area-text">
+            <svg class="w-10 h-10 mb-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <p class="mb-2 text-sm text-gray-600"><span class="font-bold">クリックして画像を選択</span></p>
+            <p class="text-xs text-gray-500">PNG, JPG, GIF (Max 800x800px)</p>
+          </div>
+          <img id="preview" class="hidden max-h-56 rounded-md object-contain" alt="画像プレビュー">
           
-          <div class="custom-file mb-3">
-            <input type="file" class="custom-file-input" name="file" id="fileInput" required accept="image/*">
-            <label class="custom-file-label" for="fileInput">ファイルを選択...</label>
-          </div>
-
-          <div class="text-center">
-            <img id="preview" class="preview-img" src="" alt="画像プレビュー">
-          </div>
-
-          <div class="mt-4">
-            <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
-              AIで判定する
-            </button>
-            
-            <button class="btn btn-primary btn-block btn-lg d-none" type="button" disabled id="loadingBtn">
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              解析中...
-            </button>
-          </div>
-
-        </form>
+          <input type="file" name="file" id="fileInput" class="hidden" required accept="image/*" />
+        </label>
       </div>
-    </div>
+
+      <div class="mt-6">
+        <button type="submit" id="submitBtn" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-bold rounded-lg text-lg px-5 py-3 text-center transition duration-200 shadow-md">
+          AIで判定する
+        </button>
+        
+        <button type="button" disabled id="loadingBtn" class="hidden w-full text-white bg-indigo-400 cursor-not-allowed font-bold rounded-lg text-lg px-5 py-3 text-center flex justify-center items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          解析中...
+        </button>
+      </div>
+
+    </form>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // ファイル選択時にプレビューを表示し、ファイル名をラベルにセットする
   $('#fileInput').on('change', function(e) {
       var file = e.target.files[0];
+      if(!file) return;
+
       var reader = new FileReader();
       
-      // ファイル名をラベルに表示
-      $(this).next('.custom-file-label').html(file.name);
-
-      // 画像プレビュー
       reader.onload = function(e) {
-          $('#preview').attr('src', e.target.result).show();
+          // テキストエリアを隠して画像を表示
+          $('#drop-area-text').addClass('hidden');
+          $('#preview').attr('src', e.target.result).removeClass('hidden');
       }
       reader.readAsDataURL(file);
   });
 
-  // 送信時にボタンをローディング状態にする
   function showLoading() {
-      $('#submitBtn').addClass('d-none'); // 判定ボタンを隠す
-      $('#loadingBtn').removeClass('d-none'); // ローディングを表示
+      $('#submitBtn').addClass('hidden');
+      $('#loadingBtn').removeClass('hidden');
   }
 </script>
 {% endblock %}
