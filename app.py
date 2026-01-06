@@ -5,9 +5,8 @@ import logging
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # 警告以外は表示しない
 
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template,send_from_directory
 from werkzeug.utils import secure_filename
-# from markupsafe import Markup # HTMLを作らなくなるので不要
 import keras
 import numpy as np
 from PIL import Image, ImageOps
@@ -21,7 +20,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "images")
+#ディレクトリ構成の変更
+DATA_DIA = os.path.join(BASE_DIR,"data")
+UPLOAD_FOLDER = os.path.join(DATA_DIA, "uploads")
+# 将来用（ログ保存など）
+RESULTS_FOLDER = os.path.join(DATA_DIA,"results")
+
 MODEL_PATH = os.path.join(BASE_DIR, "image_classifier.h5")
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -31,6 +35,11 @@ img_size = 32
 n_result = 3
 
 app = Flask(__name__)
+
+#フォルダがなければ自動作成
+os.makedirs(UPLOAD_FOLDER,exist_ok=True)
+os.makedirs(RESULTS_FOLDER,exist_ok=True)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ===== 遅延ロード（起動を止めない）=====
@@ -48,12 +57,12 @@ def get_model():
         # モデルのロード
         model = keras.saving.load_model(MODEL_PATH, compile=False)
         
-        # 【変更】英語ログ出力
+        # 英語ログ出力
         logger.info(f"Model loaded successfully: {MODEL_PATH}")
         return model
     except Exception as e:
         model_error = e
-        # 【変更】エラーログも英語で詳細に出力
+        # エラーログも英語で詳細に出力
         logger.error(f"Failed to load model: {repr(e)}")
         raise
 
@@ -75,6 +84,11 @@ def preprocess(filepath, img_size=32, crop_right_ratio=1.0):
     x = np.expand_dims(x, 0)
     return x, img
 
+#data/uploads 画像を表示するため
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],filename)
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
@@ -93,7 +107,7 @@ def result():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
     filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
     logger.info(f"File uploaded: {filename}")
@@ -129,7 +143,7 @@ def result():
             "probability": round(ratio * 100, 1)
         })
 
-    image_url = url_for("static", filename=f"images/{filename}")
+    image_url = url_for("uploaded_file", filename=filename)
     
     # テンプレートに 'predictions' を渡す
     return render_template("result.html", predictions=predictions, filepath=image_url)
