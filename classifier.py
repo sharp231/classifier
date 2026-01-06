@@ -1,10 +1,24 @@
 import os
+import logging
+
+# 【設定】TensorFlowのログ（oneDNNなどの通知）を抑制
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # 警告以外は表示しない
+
 from flask import Flask, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
-from markupsafe import Markup
+# from markupsafe import Markup # HTMLを作らなくなるので不要
 import keras
 import numpy as np
 from PIL import Image, ImageOps
+
+# ===== ロギング設定 (チーム開発仕様) =====
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "images")
@@ -31,17 +45,16 @@ def get_model():
         raise model_error
 
     try:
-        print("CWD:", os.getcwd())
-        print("__file__:", os.path.abspath(__file__))
-        print("MODEL_PATH:", MODEL_PATH)
-        print("MODEL_EXISTS:", os.path.exists(MODEL_PATH))
-
+        # モデルのロード
         model = keras.saving.load_model(MODEL_PATH, compile=False)
-        print("MODEL_LOADED:", model.input_shape, model.output_shape)
+        
+        # 【変更】英語ログ出力
+        logger.info(f"Model loaded successfully: {MODEL_PATH}")
         return model
     except Exception as e:
         model_error = e
-        print("MODEL_LOAD_FAILED:", repr(e))
+        # 【変更】エラーログも英語で詳細に出力
+        logger.error(f"Failed to load model: {repr(e)}")
         raise
 
 def allowed_file(filename):
@@ -69,10 +82,12 @@ def index():
 @app.route("/result", methods=["POST"])
 def result():
     if "file" not in request.files:
+        logger.warning("No file part in request")
         return redirect(url_for("index"))
 
     file = request.files["file"]
     if not file.filename or not allowed_file(file.filename):
+        logger.warning(f"Invalid file or no selection: {file.filename}")
         return redirect(url_for("index"))
 
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -81,30 +96,50 @@ def result():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
+    logger.info(f"File uploaded: {filename}")
+
     ratios = [1.0, 0.8, 0.65]
     preds = []
 
     m = get_model()
 
+    # 複数パターンで推論（アンサンブル）
     for r in ratios:
         x, img32 = preprocess(filepath, img_size=32, crop_right_ratio=r)
-        img32.save(os.path.join(UPLOAD_FOLDER, f"_preprocessed_{str(r).replace('.','')}.png"))
+        # デバッグ用の画像保存（必要なければ削除可）
+        # img32.save(os.path.join(UPLOAD_FOLDER, f"_preprocessed_{str(r).replace('.','')}.png"))
+        
         y_r = m.predict(x, verbose=0)[0]
         preds.append(y_r)
 
+    # 結果の平均をとる
     y = np.mean(np.stack(preds, axis=0), axis=0)
     sorted_idx = np.argsort(y)[::-1]
 
-    result_html = ""
+    # 【変更】HTML文字列ではなく、データのリストを作成する
+    predictions = []
     for i in range(n_result):
         idx = int(sorted_idx[i])
         ratio = float(y[idx])
         label = labels[idx]
-        result_html += f"<p>{round(ratio*100, 1)}%の確率で{label}です。</p>"
+        
+        # 辞書型でリストに追加
+        predictions.append({
+            "label": label,
+            "probability": round(ratio * 100, 1)
+        })
 
-    # NOTE: filepathをimg srcに使うならURL化が必要（/static/...）
     image_url = url_for("static", filename=f"images/{filename}")
-    return render_template("result.html", result=Markup(result_html), filepath=image_url)
+    
+    # テンプレートに 'predictions' を渡す
+    return render_template("result.html", predictions=predictions, filepath=image_url)
 
 if __name__ == "__main__":
+    logger.info("Starting Flask server...")
     app.run(debug=True, port=5000)
+
+# コード内のコメント: 日本語でOK（日本人チームなら理解しやすさ優先）。
+
+# ログ出力（printなど）: 英語推奨（文字化け防止、検索性向上）。
+
+# ユーザーの画面: 日本語（ターゲットユーザーに合わせる）
