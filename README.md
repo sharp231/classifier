@@ -1,3 +1,4 @@
+
 下記がプロジェクトの解説。
 
 # End-to-End Image Classification App (CIFAR-10)
@@ -95,8 +96,6 @@ python classifier.py
 
 ````
 
----
-
 ### 補足：`requirements.txt` について
 
 上記の `README.md` を機能させるために、以下の内容で `requirements.txt` というファイルをプロジェクトのルートに作成して一緒に保存してください。（Render へのデプロイ時にも必須となります）
@@ -113,5 +112,4 @@ gunicorn
 werkzeug
 
 ```
-
 ````
