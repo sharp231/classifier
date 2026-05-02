@@ -2,16 +2,15 @@
 
 # End-to-End Image Classification App (CIFAR-10)
 
-画像認識モデルの学習から Web アプリケーションとしてのデプロイまでを、End-to-End で実装したプロジェクトです。
-ユーザーがアップロードした画像を AI が解析し、10 種類のクラス（飛行機、猫、犬など）に分類します。
+画像認識モデルの学習から Web アプリケーションとしてのデプロイまでを、End-to-End で実装したプロジェクトです。  
+ユーザーがアップロードした画像を AI が解析し、CIFAR-10 の 10 クラスに分類します。
 
 ## プロジェクト概要
 
-機械学習モデルを単に作成するだけでなく、実際の Web サービスとして稼働させるためのアーキテクチャ設計と実装を行いました。
-入力画像の揺らぎ（回転、アスペクト比）吸収や、推論精度の安定化（TTA）など、実運用を想定した工夫を取り入れています。
+機械学習モデルを作成するだけでなく、実際の Web サービスとして動作させるための設計、実装、デプロイまでを行いました。
+入力画像の向きや縦横比の違いを吸収する前処理、推論結果を安定させる Test Time Augmentation、pytest と GitHub Actions による自動テストを取り入れています
 
-- **開発期間:** [3ヶ月]
-- **担当領域:** 企画・要件定義 / モデル構築 / Web 実装 / デプロイ (Full Cycle)
+- **担当領域:** 企画・要件定義 / モデル構築 / Web 実装 / テスト / デプロイ
 
 ## 技術的工夫 (Key Features)
 
@@ -24,9 +23,9 @@
 
 ユーザーがアップロードする画像は、撮影端末や保存形式によって向きや縦横比が異なるため、推論前に以下の前処理を行っています。
 
-- EXIF 自動補正: スマートフォン写真などに含まれる回転情報を反映し、正しい向きに補正
-- Center Crop: アスペクト比を維持したまま中央を切り抜き、単純なリサイズによる画像の歪みを防止
-- RGB 変換: 推論モデルに入力できる形式へ統一
+- **EXIF 自動補正:** スマートフォン写真などに含まれる回転情報を反映し、正しい向きに補正
+- **Center Crop:** アスペクト比を維持したまま中央を切り抜き、単純なリサイズによる画像の歪みを防止
+- **RGB 変換:** 推論モデルに入力できる形式へ統一
 
 ### 3.ロギングと運用時の可観測性
 
@@ -38,10 +37,10 @@
 
 モデルの読み込みや画像アップロード処理では、アプリ全体が不安定にならないように以下を意識しています。
 
-- Lazy Loading: 起動時ではなく、必要になったタイミングでモデルを読み込むことで、起動時の負荷を軽減
-- 入力チェック: ファイル未選択や許可されていない拡張子のアップロードを検知し、トップページへ戻す
-- 安全なファイル名処理: secure_filename を使い、アップロードファイル名を安全な形式に変換
-- 例外ログ: モデル読み込み失敗時にはログへ詳細を出力し、原因調査をしやすくする
+- **Lazy Loading:** 起動時ではなく、必要になったタイミングでモデルを読み込むことで、起動時の負荷を軽減
+- **入力チェック:** ファイル未選択や許可されていない拡張子のアップロードを検知し、トップページへ戻す
+- **安全なファイル名処理:** secure_filename を使い、アップロードファイル名を安全な形式に変換
+- **例外ログ:** モデル読み込み失敗時にはログへ詳細を出力し、原因調査をしやすくする
 
 ## Testing / CI
 
@@ -72,44 +71,44 @@ uv run pytest
 | Category           | Technology                               |
 | :----------------- | :--------------------------------------- |
 | **ML / DL**        | Python 3, TensorFlow, Keras (CNN Model)  |
-| **Backend**        | Flask (Web API & Model Serving)          |
+| **Backend**        | Flask          |
 | **Frontend**       | HTML5, Tailwind CSS, JavaScript (jQuery) |
 | **Image Proc**     | Pillow (PIL), NumPy                      |
-| **Testing / CI**   | pytest, GitHub Actions |
-| **Infrastructure** | Render (PaaS)                            |
+| **Testing / CI**   | pytest, GitHub Actions                   |
+| **Infrastructure** | Render                             |
 
-##  ディレクトリ構成
+## ディレクトリ構成
 
 ```text
 .
-├── app.py      # Flaskアプリケーションエントリーポイント（推論API）
-├── train_cifar10.py   # モデル学習用スクリプト
-├── karas.py           # 前処理ロジック（EXIF補正等）
-├── image_classifier.h5 # 学習済みモデル（バイナリ）
-├── data/               # ★新規作成（.gitignore推奨）
-│   ├── uploads/        # ユーザーがアップした画像
-│   └── results/        # 推論ログや結果ファイル（将来用）
-├── templates/         # フロントエンド（HTML）
-│   ├── index.html     # アップロード画面
-│   ├── result.html    # 結果表示画面
-    └── layout.html    # 共通レイアウト
+├── app.py                 # Flask アプリケーション本体
+├── train_cifar10.py        # モデル学習用スクリプト
+├── karas.py                # 前処理関連の検証・補助スクリプト
+├── image_classifier.h5     # 学習済みモデル
+├── tests/
+│   └── test_app.py         # pytest による Web フローのテスト
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # GitHub Actions の CI 設定
+├── data/
+│   └── uploads/            # アップロード画像の保存先
+├── templates/
+│   ├── index.html          # アップロード画面
+│   ├── result.html         # 結果表示画面
+│   └── layout.html         # 共通レイアウト
+├── static/                 # CSS、画像、favicon などの静的ファイル
+├── pyproject.toml          # 依存関係と pytest 設定
+└── uv.lock                 # uv のロックファイル
 
-````
+```
 
 ## ローカルでの実行方法
 
 ```bash
-# 1. リポジトリのクローン
 git clone [repository_url]
 cd [project_name]
 
-# 2. 仮想環境の構築とライブラリのインストール
 uv sync
-
-# 3. モデルの学習（学習済みモデルがない場合）
-uv run train_cifar10.py
-
-# 4. アプリケーションの起動
 uv run app.py
 
 ```
@@ -142,4 +141,4 @@ uv run app.py
 - **FastAPI への移行検討**
   - 推論処理の分離や API 化を進める場合、FastAPI への移行を検討
   - 自動 API ドキュメントや非同期処理による拡張性向上を狙う
-  <!-- 発想からできるようにしていきたい -->
+
