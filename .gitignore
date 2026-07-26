@@ -1,0 +1,14 @@
+data/
+.copilot-commit-message-instructions.md
+
+__pycache__/
+*.py[cod]
+
+.pytest_cache/
+.pytest-run/
+.pytest-tmp/
+
+.venv/
+.uv-cache/
+.python-version
+.DS_Store
