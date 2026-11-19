@@ -5,8 +5,9 @@ from uuid import uuid4
 from pathlib import Path
 from typing import TypedDict
 
+from inference import predict_probabilities
 
-# 【設定】TensorFlowのログ（oneDNNなどの通知）を抑制
+#  【設定】TensorFlowのログ（oneDNNなどの通知）を抑制
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # 警告以外は表示しない
 import keras
@@ -19,7 +20,7 @@ from flask import (
     render_template,
     send_from_directory,
 )
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -79,9 +80,8 @@ ALLOWED_MIME_TYPES = frozenset(
 )
 
 LABELS = ["飛行機", "自動車", "鳥", "猫", "鹿", "犬", "カエル", "馬", "船", "トラック"]
-IMAGE_SIZE = 32
 RESULT_COUNT = 3
-TTA_CROP_RATIOS = (1.0, 0.8, 0.65)
+TTA_CROP_RATIOS = (1.0,)
 
 app = Flask(__name__)
 app.config.update(
@@ -328,7 +328,7 @@ def save_validated_upload(
     try:
         uploaded_file.stream.seek(0)
         uploaded_file.save(filepath)
-        
+
     except Exception:
         filepath.unlink(missing_ok=True)
         raise
@@ -336,63 +336,14 @@ def save_validated_upload(
     return stored_filename, filepath
 
 
-def preprocess(
-    filepath: str | Path,
-    image_size: int = IMAGE_SIZE,
-    crop_right_ratio: float = 1.0,
-):
-    if not 0 < crop_right_ratio <= 1.0:
-        raise ValueError("crop_right_ratio must be between 0 and 1")
-
-    with Image.open(filepath) as source_image:
-        image = ImageOps.exif_transpose(source_image).convert("RGB")
-
-    if crop_right_ratio < 1.0:
-        width, height = image.size
-        crop_width = max(1, int(width * crop_right_ratio))
-        image = image.crop((0, 0, crop_width, height))
-
-    image = ImageOps.fit(
-        image,
-        (image_size, image_size),
-        method=Image.Resampling.LANCZOS,
-    )
-
-    input_array = np.asarray(image, dtype=np.float32) / 255.0
-    input_array = np.expand_dims(input_array, axis=0)
-
-    return input_array, image
-
-
 def predict_image(filepath: str | Path) -> list[dict[str, float | str]]:
-    loaded_model = get_model()
-    prediction_results = []
-
-    for crop_ratio in TTA_CROP_RATIOS:
-        input_array, _ = preprocess(
-            filepath,
-            image_size=IMAGE_SIZE,
-            crop_right_ratio=crop_ratio,
-        )
-        prediction = loaded_model.predict(
-            input_array,
-            verbose=0,
-        )[0]
-
-        prediction_results.append(prediction)
-
-    averaged_prediction = np.mean(
-        np.stack(prediction_results, axis=0),
-        axis=0,
+    averaged_prediction = predict_probabilities(
+        filepath,
+        model=get_model(),
+        crop_ratios=TTA_CROP_RATIOS,
+        class_count=len(LABELS),
     )
-    if averaged_prediction.ndim != 1:
-        raise RuntimeError("Model prediction must be a one-dimensional array")
 
-    if len(averaged_prediction) != len(LABELS):
-        raise RuntimeError(
-            "Model output count does not match label count:"
-            f"output={len(averaged_prediction)} labels={len(LABELS)}"
-        )
     sorted_indices = np.argsort(averaged_prediction)[::-1]
     predictions = []
 
@@ -406,6 +357,7 @@ def predict_image(filepath: str | Path) -> list[dict[str, float | str]]:
                 "probability": round(probability * 100, 1),
             }
         )
+
     return predictions
 
 

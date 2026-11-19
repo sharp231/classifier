@@ -108,11 +108,11 @@ def test_result_does_not_save_invalid_image(
     response = client.post(
         "/result",
         data={
-            "file": {
+            "file": (
                 BytesIO(b"not an image"),
                 "fake.png",
                 "image/png",
-            }
+            )
         },
         content_type="multipart/form-data",
     )

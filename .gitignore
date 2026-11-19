@@ -1,5 +1,5 @@
 data/
-.copilot-commit-message-instructions.md
+
 
 __pycache__/
 *.py[cod]
@@ -10,5 +10,4 @@ __pycache__/
 
 .venv/
 .uv-cache/
-.python-version
 .DS_Store
