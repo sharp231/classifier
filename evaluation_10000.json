@@ -1,0 +1,143 @@
+{
+  "model": "image_classifier.h5",
+  "python": "3.13.5",
+  "dataset": "CIFAR-10 test",
+  "selection": "first N images in dataset order",
+  "samples": 10000,
+  "timing_scope": "image preprocessing and model prediction",
+  "timing_excludes": [
+    "dataset loading",
+    "model loading",
+    "temporary PNG creation",
+    "warmup"
+  ],
+  "previous_direct_input_accuracy_rounded": 0.652,
+  "evaluation_note": "The training script also uses this test set as validation_data.",
+  "results": {
+    "baseline": {
+      "crop_ratios": [
+        1.0
+      ],
+      "samples": 10000,
+      "accuracy": 0.652,
+      "elapsed_seconds": 709.5362444999992,
+      "milliseconds_per_image": 70.95362444999992,
+      "per_class": {
+        "飛行機": {
+          "samples": 1000,
+          "correct": 656,
+          "accuracy": 0.656
+        },
+        "自動車": {
+          "samples": 1000,
+          "correct": 868,
+          "accuracy": 0.868
+        },
+        "鳥": {
+          "samples": 1000,
+          "correct": 493,
+          "accuracy": 0.493
+        },
+        "猫": {
+          "samples": 1000,
+          "correct": 598,
+          "accuracy": 0.598
+        },
+        "鹿": {
+          "samples": 1000,
+          "correct": 420,
+          "accuracy": 0.42
+        },
+        "犬": {
+          "samples": 1000,
+          "correct": 514,
+          "accuracy": 0.514
+        },
+        "カエル": {
+          "samples": 1000,
+          "correct": 787,
+          "accuracy": 0.787
+        },
+        "馬": {
+          "samples": 1000,
+          "correct": 701,
+          "accuracy": 0.701
+        },
+        "船": {
+          "samples": 1000,
+          "correct": 756,
+          "accuracy": 0.756
+        },
+        "トラック": {
+          "samples": 1000,
+          "correct": 727,
+          "accuracy": 0.727
+        }
+      }
+    },
+    "tta": {
+      "crop_ratios": [
+        1.0,
+        0.8,
+        0.65
+      ],
+      "samples": 10000,
+      "accuracy": 0.5871,
+      "elapsed_seconds": 1750.7567708999995,
+      "milliseconds_per_image": 175.07567708999997,
+      "per_class": {
+        "飛行機": {
+          "samples": 1000,
+          "correct": 572,
+          "accuracy": 0.572
+        },
+        "自動車": {
+          "samples": 1000,
+          "correct": 813,
+          "accuracy": 0.813
+        },
+        "鳥": {
+          "samples": 1000,
+          "correct": 577,
+          "accuracy": 0.577
+        },
+        "猫": {
+          "samples": 1000,
+          "correct": 677,
+          "accuracy": 0.677
+        },
+        "鹿": {
+          "samples": 1000,
+          "correct": 283,
+          "accuracy": 0.283
+        },
+        "犬": {
+          "samples": 1000,
+          "correct": 478,
+          "accuracy": 0.478
+        },
+        "カエル": {
+          "samples": 1000,
+          "correct": 640,
+          "accuracy": 0.64
+        },
+        "馬": {
+          "samples": 1000,
+          "correct": 541,
+          "accuracy": 0.541
+        },
+        "船": {
+          "samples": 1000,
+          "correct": 742,
+          "accuracy": 0.742
+        },
+        "トラック": {
+          "samples": 1000,
+          "correct": 548,
+          "accuracy": 0.548
+        }
+      }
+    }
+  },
+  "accuracy_difference_percentage_points": -6.490000000000007
+}
