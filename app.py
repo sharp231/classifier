@@ -344,6 +344,12 @@ def predict_image(filepath: str | Path) -> list[dict[str, float | str]]:
         class_count=len(LABELS),
     )
 
+    logger.info(
+        "Inference completed: crop_ratios=%s model_calls=%d",
+        TTA_CROP_RATIOS,
+        len(TTA_CROP_RATIOS),
+    )
+
     sorted_indices = np.argsort(averaged_prediction)[::-1]
     predictions = []
 
